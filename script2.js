@@ -16,6 +16,17 @@ let index = 0;
 let flowerInterval;
 let heartInterval;
 
+//Preload all images
+const preloadedImages = [];
+function preloadImages() {
+  photos.forEach((src, i) => {
+    const img = new Image();
+    img.src = src;
+    preloadedImages[i] = img;
+  });
+  console.log("All images preloaded!");
+}
+
 // Next scene function
 function nextScene() {
   document.getElementById(`scene${current}`).classList.remove("active");
@@ -187,22 +198,39 @@ startScreen.addEventListener("click", () => {
   startSlideshow();
 });
 
+// Preload images when page loads
+window.addEventListener('load', () => {
+  preloadImages();
+});
+
 // Music control functions
 function startMusic(audio) {
+  // Ensure audio is loaded
+  if (audio.readyState < 2) {
+    audio.load();
+  }
+  
   audio.currentTime = 0;
   audio.volume = 0;
-  audio.play();
   
-  // Fade in
-  let vol = 0;
-  const fadeIn = setInterval(() => {
-    vol += 0.05;
-    audio.volume = Math.min(vol, 1);
-    
-    if (vol >= 1) {
-      clearInterval(fadeIn);
-    }
-  }, 50);
+  const playPromise = audio.play();
+  
+  if (playPromise !== undefined) {
+    playPromise.then(() => {
+      // Fade in
+      let vol = 0;
+      const fadeIn = setInterval(() => {
+        vol += 0.05;
+        audio.volume = Math.min(vol, 1);
+        
+        if (vol >= 1) {
+          clearInterval(fadeIn);
+        }
+      }, 50);
+    }).catch(error => {
+      console.log("Audio play failed:", error);
+    });
+  }
 }
 
 function stopMusic(audio) {
